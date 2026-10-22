@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d17">
+<title>Моя аптечка</title>
+<style>
+:root{--bg:#080d17;--panel:#101827;--panel2:#141f31;--line:#26364e;--text:#eef5ff;--muted:#9eafc8;--blue:#48baff;--green:#4ce0a0;--orange:#ffbf69;--red:#ff7b87}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#10203a 0,#080d17 55%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:22px 16px 48px}.hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:clamp(26px,5vw,38px);margin:0;letter-spacing:-.7px}.subtitle{color:var(--muted);margin-top:6px}.pill{border:1px solid #245276;background:#10263a;color:#a9ddff;padding:7px 11px;border-radius:99px;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.stat,.panel{background:linear-gradient(145deg,#111c2d,#0d1522);border:1px solid var(--line);border-radius:16px}.stat{padding:14px}.stat b{font-size:24px;display:block}.stat span{color:var(--muted);font-size:12px}
+.toolbar{padding:14px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:14px}
+input,select,button{font:inherit;color:var(--text);background:#0a1220;border:1px solid #30425d;border-radius:10px;padding:11px 12px;min-width:0}
+input::placeholder{color:#8294ae}button{cursor:pointer;transition:.15s}button:hover{border-color:var(--blue);transform:translateY(-1px)}.primary{background:#123858;border-color:#277eb4}.small{padding:7px 10px;font-size:12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.tab{border-radius:99px;padding:8px 13px}.tab.active{background:#143b5a;border-color:#48baff;color:#d7f1ff}
+.tablebox{overflow:auto;border-radius:16px}.table{width:100%;border-collapse:collapse;min-width:800px}.table th{background:#142238;color:#b8dfff;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}.table th button{background:transparent;border:0;border-radius:0;padding:14px 12px;color:inherit;text-align:left;width:100%;font-weight:700}.table td{padding:13px 12px;border-top:1px solid #202f45;vertical-align:top}.table tbody tr:hover{background:#122034}.name{font-weight:700}.desc{color:#bac8dc;font-size:13px;max-width:330px}.tag{display:inline-block;padding:4px 8px;border-radius:99px;font-size:11px;border:1px solid #34465e;color:#c8d8ee;white-space:nowrap}.tag.human{color:#9bd9ff;border-color:#28587b;background:#10273a}.tag.pet{color:#a9f1cd;border-color:#286b53;background:#102b23}.tag.sup{color:#ffdaa0;border-color:#75562a;background:#2b2111}.warning{border:1px solid #6c5129;background:#211b12;color:#f5d6a3;border-radius:14px;padding:13px 15px;margin-top:15px;font-size:13px}.empty{padding:28px;text-align:center;color:var(--muted)}.delete-btn{border-color:#63333f;color:#ff9aa5;background:#26131a;padding:6px 9px;font-size:12px}.delete-btn:hover{border-color:#ff7b87}dialog::backdrop{background:#02050bc9}#newName{background:#0a1220;color:var(--text);border:1px solid #30425d;border-radius:10px;padding:11px 12px}.footer{color:var(--muted);font-size:12px;margin-top:16px}.mobilecards{display:none}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.toolbar button{grid-column:1/-1}.desktop-table{display:none}.mobilecards{display:grid;gap:9px}.medcard{padding:14px;border:1px solid var(--line);border-radius:14px;background:#101827}.medtop{display:flex;align-items:start;justify-content:space-between;gap:10px}.medcard p{margin:9px 0 0;color:#bac8dc;font-size:13px}.medmeta{color:var(--muted);font-size:12px;margin-top:8px}}
+@media(max-width:390px){.toolbar{grid-template-columns:1fr}.toolbar input,.toolbar button{grid-column:auto}.wrap{padding:17px 11px 36px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="hero"><div><h1>🩺 Моя аптечка</h1><div class="subtitle">Лекарства, ветеринарные средства и медицинские принадлежности</div></div><span class="pill">✦ УМНЫЙ КАТАЛОГ</span></header>
+<section class="stats">
+<div class="stat"><b id="total">0</b><span>Всего позиций</span></div><div class="stat"><b id="humanCount">0</b><span>💊 Для человека</span></div><div class="stat"><b id="petCount">0</b><span>🐾 Для животных</span></div><div class="stat"><b id="supplyCount">0</b><span>🩹 Принадлежности</span></div>
+</section>
+<section class="panel toolbar">
+<input id="search" type="search" placeholder="🔎 Поиск по названию или назначению…">
+<select id="purpose"><option value="">Все области применения</option></select>
+<select id="sort"><option value="name">Сортировка: название</option><option value="category">Сортировка: категория</option><option value="purpose">Сортировка: назначение</option></select>
+<button class="primary" id="addBtn">＋ Добавить препарат</button><button id="export">⬇ Экспорт CSV</button>
+</section>
+<nav class="tabs" aria-label="Категории">
+<button class="tab active" data-cat="Все">📚 Все</button><button class="tab" data-cat="Человек">💊 Человек</button><button class="tab" data-cat="Животные">🐾 Животные</button><button class="tab" data-cat="Принадлежности">🩹 Принадлежности</button><button class="tab" data-cat="Мази">🧴 Мази</button><button class="tab" data-cat="Уточнить">❔ Уточнить название</button>
+</nav>
+<section class="panel tablebox desktop-table"><table class="table"><thead><tr><th><button data-sort="name">Название ↕</button></th><th><button data-sort="category">Категория ↕</button></th><th><button data-sort="purpose">Назначение / область ↕</button></th><th>Примечание</th><th>Действие</th></tr></thead><tbody id="tbody"></tbody></table><div id="empty" class="empty" hidden>Ничего не найдено. Попробуйте изменить поиск или фильтры.</div></section>
+<section class="mobilecards" id="cards"></section>
+<div class="warning">⚠️ <b>Важно.</b> Каталог справочный, не является назначением лечения. Не сочетайте препараты с одинаковым действующим веществом. Ибупрофен и нимесулид не следует самостоятельно принимать вместе. Не давайте животным человеческие лекарства без ветеринара. Инъекции — только по назначению специалиста.</div>
+<dialog id="addDialog" style="width:min(92vw,480px);background:#101827;color:#eef5ff;border:1px solid #30425d;border-radius:18px;padding:22px">
+  <form id="addForm">
+    <h2 style="margin:0 0 6px">＋ Добавить в аптечку</h2>
+    <p style="color:#9eafc8;margin:0 0 16px;font-size:13px">Введите только название. Каталог попробует заполнить назначение и категорию автоматически. Если не уверен — отметит, что нужно проверить.</p>
+    <label for="newName" style="display:block;margin-bottom:6px">Название</label>
+    <input id="newName" required maxlength="100" placeholder="Например, Цетиризин" style="width:100%;margin-bottom:16px">
+    <div id="autoPreview" style="background:#0a1220;border:1px solid #26364e;border-radius:12px;padding:12px;margin-bottom:16px;color:#bac8dc;font-size:13px">Автозаполнение появится после ввода названия.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" id="cancelAdd">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+<div class="footer">Добавленные и удалённые записи сохраняются в браузере на этом устройстве. Автозаполнение работает по встроенному справочнику и подсказкам; неизвестные названия помечаются «Уточнить». Для синхронизации между устройствами нужен общий онлайн-сервис. Экспорт CSV можно открыть в Excel или Google Таблицах.</div>
+</main>
+<script>
+let medicines = [
+["Мебеверин","Человек","Спазмы кишечника","Кишечник",""],
+["Лоратадин","Человек","Аллергические симптомы","Кожа, нос, глаза",""],
+["Этамзилат (раствор)","Человек","Средство при отдельных кровотечениях","Кровотечение","Раствор для инъекций — по назначению"],
+["Папаверин (раствор)","Человек","Спазмолитик","Внутренние органы","Инъекционную форму применяют по назначению"],
+["Милпразон","Животные","Противогельминтное средство","Кошки / собаки","Выбирать только по виду животного и упаковке"],
+["Активированный уголь","Человек","Адсорбент; ограниченное применение при отдельных отравлениях","ЖКТ","Не заменяет срочную помощь при отравлении"],
+["Лизобакт","Человек","Местное средство при некоторых заболеваниях рта и горла","Рот, горло",""],
+["Шалфей Бранхиактив","Человек","Назначение зависит от формы продукта","Горло","Проверить упаковку"],
+["Фурацилин Авексима","Человек","Антисептик по инструкции конкретной формы","По инструкции",""],
+["Альмагель (суспензия)","Человек","При изжоге и повышенной кислотности","Желудок, пищевод",""],
+["Нимесулид Тева","Человек","Обезболивающее и противовоспалительное средство","Общее действие","Есть ограничения по безопасности, в том числе для печени"],
+["Энтерол","Человек","При некоторых видах диареи","Кишечник",""],
+["Экофурил","Человек","При отдельных кишечных инфекциях по показаниям","Кишечник",""],
+["Нурофен 200/400","Человек","Боль, воспаление, температура","Общее действие","Действующее вещество — ибупрофен"],
+["Парацетамол","Человек","Боль и температура","Общее действие","Опасен для кошек; не давать животным"],
+["Ибупрофен","Человек","Боль, воспаление, температура","Общее действие","Не сочетать самостоятельно с нимесулидом"],
+["Но-шпа","Человек","Снятие спазмов","Гладкая мускулатура","Действующее вещество — дротаверин"],
+["Дротаверин","Человек","Снятие спазмов","Гладкая мускулатура","Дублирует действие Но-шпы"],
+["Хофитол","Человек","Средство на основе артишока для отдельных показаний","Желчевыводящая система",""],
+["Ренни","Человек","При изжоге","Желудок, пищевод",""],
+["Декарис","Человек","Противогельминтный препарат","Паразиты","Имеет ограничения по безопасности"],
+["Магнелис B6","Человек","Восполнение магния и витамина B6 при показаниях","Общее действие",""],
+["Дорамитцин","Уточнить","Не удалось надёжно идентифицировать","Не установлено","Проверьте написание и действующее вещество"],
+["Ингавирин","Человек","Противовирусный препарат","По заявленным показаниям","Эффективность зависит от показания; доказательность неоднозначна"],
+["Фурацилин","Человек","Антисептик в зависимости от формы","Кожа / полость рта","Следовать инструкции конкретного продукта"],
+["Ковелос Вита (сорбент)","Уточнить","Предположительно сорбционное средство","Уточнить","Проверить точное название и состав"],
+["Зиртек","Человек","При аллергии","Кожа, нос, глаза",""],
+["Левомеколь","Мази","Для отдельных инфицированных ран","Кожа, раны","Использовать по показаниям"],
+["Мотониум","Человек","При тошноте и рвоте по показаниям","ЖКТ","Домперидон; есть противопоказания и риски"],
+["Бепантен","Мази","Уход за раздражённой кожей","Кожа",""],
+["Насобек","Человек","При определённых видах ринита","Нос","Назальный глюкокортикостероид"],
+["Мазь Вишневского","Мази","Наружное средство","Кожа","Не является универсальным лечением ран"],
+["Имодиум","Человек","Уменьшение диареи","Кишечник","Не применять при некоторых инфекциях/крови в стуле"],
+["Холензим","Человек","Средство для пищеварения по показаниям","ЖКТ",""],
+["Супрастин","Человек","При аллергии","Кожа, дыхательные пути","Может вызывать сонливость"],
+["Капотен","Человек","Снижение артериального давления","Сердечно-сосудистая система","Не использовать для самостоятельной коррекции дозы"],
+["Фуцикорт*","Мази","При некоторых воспалительных заболеваниях кожи с бактериальной инфекцией","Кожа","Название нужно подтвердить по упаковке"],
+["Ангидак","Человек","Местное средство при боли и воспалении","Рот, горло",""],
+["Китайская мазь № 1","Мази","Не установлено","Кожа?","Проверить состав и инструкцию"],
+["Китайская мазь № 2","Мази","Не установлено","Кожа?","Проверить состав и инструкцию"],
+["Нурофактор","Уточнить","Не удалось надёжно идентифицировать","Не установлено","Проверьте точное написание на упаковке"],
+["Шприцы 2 мл — 2 шт.","Принадлежности","Отмеривание / введение растворов","Медицинские инструменты","Инъекции — только по назначению специалиста"],
+["Бинт самоклеящийся","Принадлежности","Фиксация повязок","Перевязка","Проверить назначение и тип бинта"],
+["Бинт эластичный","Принадлежности","Поддерживающая фиксация","Перевязка","Не накладывать чрезмерно туго"],
+["Пипетка","Принадлежности","Отмеривание небольших объёмов жидкости","Инструмент",""],
+["Градусник","Принадлежности","Измерение температуры","Человек / животное*","Проверить тип термометра и правила применения"],
+["Перчатки — 5/6 шт.","Принадлежности","Защита рук и гигиена","Защитные средства",""],
+["Баночки для анализов — 4 шт.","Принадлежности","Сбор биоматериала","Анализы","Соблюдать требования лаборатории"],
+["Трубка газоотводная","Принадлежности","Отведение кишечных газов по показаниям","Медицинское изделие","Для младенцев и животных — только подходящее изделие и рекомендации специалиста"]
+].map(([name,category,purpose,area,note])=>({name,category,purpose,area,note}));
+const $=id=>document.getElementById(id);let activeCat="Все", sortKey="name", direction=1;
+const norm=s=>s.toLocaleLowerCase("ru");
+const categoryClass=c=>c==="Человек"?"human":c==="Животные"?"pet":c==="Принадлежности"?"sup":"";
+function render(){
+ const q=norm($("search").value.trim()), p=$("purpose").value;
+ let rows=medicines.filter(m=>(activeCat==="Все"||(activeCat==="Уточнить"?m.category==="Уточнить":m.category===activeCat))&&(!p||m.area===p)&&(!q||norm([m.name,m.category,m.purpose,m.area,m.note].join(" ")).includes(q)));
+ rows.sort((a,b)=>norm(a[sortKey]).localeCompare(norm(b[sortKey]),"ru")*direction);
+ $("tbody").innerHTML=rows.map(m=>`<tr><td class="name">${esc(m.name)}</td><td><span class="tag ${categoryClass(m.category)}">${esc(m.category)}</span></td><td><div>${esc(m.purpose)}</div><div class="desc">📍 ${esc(m.area)}</div></td><td class="desc">${esc(m.note||"—")}</td><td><button class="delete-btn" data-delete="${m.id}" aria-label="Удалить ${esc(m.name)}">🗑 Удалить</button></td></tr>`).join("");
+ $("cards").innerHTML=rows.map(m=>`<article class="medcard"><div class="medtop"><div class="name">${esc(m.name)}</div><span class="tag ${categoryClass(m.category)}">${esc(m.category)}</span></div><p>${esc(m.purpose)}</p><div class="medmeta">📍 ${esc(m.area)}</div>${m.note?`<p>ℹ️ ${esc(m.note)}</p>`:""}<div style="margin-top:12px"><button class="delete-btn" data-delete="${m.id}">🗑 Удалить</button></div></article>`).join("");
+ $("empty").hidden=rows.length>0;
+ $("total").textContent=medicines.length;$("humanCount").textContent=medicines.filter(m=>m.category==="Человек").length;$("petCount").textContent=medicines.filter(m=>m.category==="Животные").length;$("supplyCount").textContent=medicines.filter(m=>m.category==="Принадлежности").length;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+const areas=[...new Set(medicines.map(m=>m.area))].sort((a,b)=>a.localeCompare(b,"ru"));areas.forEach(a=>{let o=document.createElement("option");o.value=a;o.textContent=a;$("purpose").appendChild(o)});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{activeCat=b.dataset.cat;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));render()}));
+$("search").addEventListener("input",render);$("purpose").addEventListener("change",render);
+$("sort").addEventListener("change",()=>{sortKey=$("sort").value;direction=1;render()});
+document.querySelectorAll("[data-sort]").forEach(b=>b.addEventListener("click",()=>{if(sortKey===b.dataset.sort)direction*=-1;else{sortKey=b.dataset.sort;direction=1}$("sort").value=sortKey;render()}));
+$("export").addEventListener("click",()=>{const header=["Название","Категория","Назначение","Область","Примечание"];const csv=[header,...medicines.map(m=>[m.name,m.category,m.purpose,m.area,m.note])].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="moja_aptechka.csv";a.click();URL.revokeObjectURL(url)});
+
+// Give every record a stable ID and restore locally added/deleted entries on this device.
+let nextId = 1;
+medicines = medicines.map(m => ({...m, id: m.id || `base-${nextId++}`}));
+const initialMedicines = medicines;
+try {
+  const saved = localStorage.getItem("moja-aptechka-v2");
+  if (saved) medicines = JSON.parse(saved);
+} catch(e) {}
+function persist(){ try { localStorage.setItem("moja-aptechka-v2", JSON.stringify(medicines)); } catch(e) {} }
+function inferMedicine(rawName) {
+  const key = norm(rawName).replace(/[ё]/g,"е").trim();
+  const known = medicines.find(m => norm(m.name).replace(/[ё]/g,"е") === key);
+  if (known) return {...known, name:rawName, note:(known.note ? known.note+"; " : "")+"Автозаполнение по записи каталога."};
+  const clues = [
+    {words:["милпразон","мильбемакс","дронтал для кошек","дронтал для собак"], category:"Животные", purpose:"Ветеринарный препарат; назначение и дозу сверить с упаковкой", area:"Кошки / собаки", note:"Проверьте вид животного, состав и дозировку по упаковке."},
+    {words:["цетиризин","лоратадин","зиртек","супрастин","кларитин","фексофенадин"], category:"Человек", purpose:"Противоаллергическое средство (предварительное определение)", area:"Аллергические симптомы", note:"Автоопределение по названию; подтвердите действующее вещество и инструкцию."},
+    {words:["ибупрофен","нурофен","парацетамол","нимесулид","найз"], category:"Человек", purpose:"Обезболивающее / жаропонижающее (предварительное определение)", area:"Боль, температура", note:"Автоопределение по названию; проверьте действующее вещество и противопоказания."},
+    {words:["левомеколь","бепантен","фуцикорт","клотримазол","пантенол"], category:"Мази", purpose:"Средство для наружного применения (предварительное определение)", area:"Кожа", note:"Проверьте состав, показания и инструкцию."},
+    {words:["бинт","шприц","пипетка","перчатки","градусник","термометр","баночка для анализов","трубка газоотводная"], category:"Принадлежности", purpose:"Медицинская принадлежность", area:"Медицинские инструменты / расходники", note:"Проверьте тип изделия и предназначение."},
+    {words:["сорбент","смекта","энтеросгель","уголь"], category:"Человек", purpose:"Сорбент (предварительное определение)", area:"ЖКТ", note:"Автоопределение по названию; при отравлении обратитесь за медицинской помощью."}
+  ];
+  for (const clue of clues) if (clue.words.some(w => key.includes(w))) return {name:rawName, category:clue.category, purpose:clue.purpose, area:clue.area, note:clue.note};
+  return {name:rawName, category:"Уточнить", purpose:"Назначение автоматически не определено", area:"Требует уточнения", note:"Проверьте точное название, действующее вещество и инструкцию на упаковке. Автоматическая классификация не является медицинской рекомендацией."};
+}
+function previewAuto(){
+ const name=$("newName").value.trim();
+ $("autoPreview").innerHTML = name ? (()=>{const m=inferMedicine(name);return `<b>Предварительно определено:</b><br>🏷️ Категория: ${esc(m.category)}<br>🩺 Назначение: ${esc(m.purpose)}<br>📍 Область: ${esc(m.area)}<br><span style="color:#9eafc8">ℹ️ ${esc(m.note)}</span>`})() : "Автозаполнение появится после ввода названия.";
+}
+$("addBtn").addEventListener("click",()=>{$("newName").value="";previewAuto();$("addDialog").showModal();$("newName").focus()});
+$("cancelAdd").addEventListener("click",()=>$("addDialog").close());
+$("newName").addEventListener("input",previewAuto);
+$("addForm").addEventListener("submit",e=>{
+ e.preventDefault();const name=$("newName").value.trim();if(!name)return;
+ if(medicines.some(m=>norm(m.name)===norm(name))){$("autoPreview").innerHTML="⚠️ Такой препарат уже есть в списке.";return;}
+ const item=inferMedicine(name);item.id="user-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);medicines.push(item);persist();$("addDialog").close();render();
+});
+document.addEventListener("click",e=>{
+ const btn=e.target.closest("[data-delete]");if(!btn)return;
+ const item=medicines.find(m=>String(m.id)===btn.dataset.delete);if(!item)return;
+ if(confirm(`Удалить «${item.name}» из аптечки?`)){medicines=medicines.filter(m=>String(m.id)!==btn.dataset.delete);persist();render();}
+});
+render();
+</script></body></html>
